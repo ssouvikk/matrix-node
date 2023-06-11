@@ -178,7 +178,7 @@ class AuthService extends BaseService {
         if (token) {
             token.user.password = await bcrypt.hash(body.password, SALT_ROUND);
             await token.user.save();
-            
+
             token.expired = true
             await token.save();
 
@@ -187,6 +187,20 @@ class AuthService extends BaseService {
         }
         this.message = "Unable to reset password. Please try again.";
         return this.response(null, false, 400);
+    }
+
+    async logout(req) {
+        const { user } = req;
+        user.jwtToken = ''
+        await user.save()
+        this.message = '';
+        return this.response(null, true, 200);
+    }
+
+    async getMe(req) {
+        this.message = '';
+        const { user } = req;
+        return this.response({ ...user.toObject(), password: '' });
     }
 
 }

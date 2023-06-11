@@ -31,5 +31,17 @@ class AuthController {
 			.catch(err => next(err));
 	}
 
+	static logout(req, res, next) {
+		AuthService.logout(req.body)
+			.then(result => res.status(result.status).json(result))
+			.catch(err => next(err));
+	}
+
+	static getMe(req, res, next) {
+		AuthService.getMe(req)
+			.then(result => res.status(result.status).json(result))
+			.catch(err => next(err));
+	}
+
 }
 module.exports = AuthController;
