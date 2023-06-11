@@ -11,4 +11,8 @@
 
 
 # Server URL
-- http://localhost:5000
+    - http://localhost:5000
+
+
+# Documentation (swagger)
+    - http://localhost:5000/api-docs
