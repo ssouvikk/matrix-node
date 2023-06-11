@@ -194,7 +194,7 @@ class AuthService extends BaseService {
         user.jwtToken = ''
         await user.save()
         this.message = '';
-        return this.response(null, true, 200);
+        return this.response(user, true, 200);
     }
 
     async getMe(req) {

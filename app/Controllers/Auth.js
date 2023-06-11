@@ -32,7 +32,7 @@ class AuthController {
 	}
 
 	static logout(req, res, next) {
-		AuthService.logout(req.body)
+		AuthService.logout(req)
 			.then(result => res.status(result.status).json(result))
 			.catch(err => next(err));
 	}
