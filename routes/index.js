@@ -14,6 +14,9 @@ AuthRouter.post('/register', AuthController.register);
 AuthRouter.get('/verify-email/:token', AuthController.verifyEmail);
 AuthRouter.post('/login', AuthController.login);
 
+AuthRouter.post('/forgot-password', AuthController.forgotPassword);
+AuthRouter.post('/reset-password', AuthController.resetPassword);
+
 Router.use('/auth', AuthRouter);
 
 

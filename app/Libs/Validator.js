@@ -27,6 +27,22 @@ class Validator {
         });
         return schema.validate(params);
     }
+
+    static forgetPasswordValidator(params) {
+        const schema = Joi.object().keys({
+            email: VALIDATIONS.EMAIL
+        });
+        return schema.validate(params);
+    }
+
+    static resetPasswordValidator(params) {
+        const schema = Joi.object().keys({
+            token: VALIDATIONS.STRING_REQUIRED,
+            password: VALIDATIONS.PASSWORD,
+            confirmPassword: VALIDATIONS.PASSWORD
+        });
+        return schema.validate(params);
+    }
     
 }
 

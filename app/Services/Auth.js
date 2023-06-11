@@ -5,10 +5,15 @@ const Config = require('../../Config');
 const BaseService = require('./BaseService');
 const { User, Token, } = require('../Models/DB');
 const { NodeMailer } = require("../Libs/Mailer");
-const { RegisterValidator, LoginValidator } = require('../Libs/Validator');
-const { TOKEN_SECRET, SALT_ROUND } = require('../../Config');
+const { TOKEN_SECRET, SALT_ROUND, FRONT_URL } = require('../../Config');
 const { TOKEN_TYPES } = require('../Libs/Constants');
 const { USER_TYPES } = require('../Libs/Constants');
+const {
+    RegisterValidator,
+    LoginValidator,
+    forgetPasswordValidator,
+    resetPasswordValidator
+} = require('../Libs/Validator');
 
 class AuthService extends BaseService {
     constructor() {
@@ -28,7 +33,7 @@ class AuthService extends BaseService {
             template: 'templates/registration.ejs',
             email: user.email,
             data: {
-                url: `${Config.FRONT_URL}/verify-email/${token}`,
+                url: `${FRONT_URL}/verify-email/${token}`,
                 user,
             },
         });
@@ -105,7 +110,7 @@ class AuthService extends BaseService {
                     }
                 }
                 const { password, jwtToken, ...userWithoutHash } = user.toObject();
-                const newToken = jwt.sign(userWithoutHash, Config.TOKEN_SECRET, { expiresIn: '24h', issuer: 'https://scotch.io' })
+                const newToken = jwt.sign(userWithoutHash, TOKEN_SECRET, { expiresIn: '24h', issuer: 'https://scotch.io' })
                 user.jwtToken = await bcrypt.hash(newToken, SALT_ROUND)
                 await user.save()
 
@@ -114,6 +119,73 @@ class AuthService extends BaseService {
             }
         }
         this.message = 'Email or password is incorrect';
+        return this.response(null, false, 400);
+    }
+
+    async forgotPassword(req) {
+        const { body } = req;
+
+        const { error } = forgetPasswordValidator(body);
+        if (error) {
+            this.message = error.message;
+            return this.response(null, false, 400);
+        }
+
+        const user = await User.findOne({ email: body.email });
+
+        if (user) {
+            const token = `${Date.now()}_${Math.random()}`
+            Token.create({
+                type: TOKEN_TYPES.FORGOT_PASSWORD,
+                user: user._id,
+                token
+            });
+
+            const link = `${FRONT_URL}/reset-password/${token}`;
+            const mailOptions = {
+                subject: 'Reset Password',
+                email: body.email,
+                template: 'templates/reset_password.ejs',
+                data: { link, user, },
+            }
+
+            const nodeMailer = new NodeMailer(mailOptions);
+            await nodeMailer.sentMail();
+
+            this.message = 'Please check your registered email';
+            return this.response(null, true, 200);
+        } else {
+            this.message = 'The email is not registered';
+            return this.response(null, false, 400);
+        }
+    }
+
+    async resetPassword(req) {
+        const { body } = req;
+
+        const { error } = resetPasswordValidator(body);
+        if (error) {
+            this.message = error.message;
+            return this.response(null, false, 400);
+        }
+
+        if (body.password != body.confirmPassword) {
+            this.message = 'Passwords are not matching';
+            return this.response(null, false, 400);
+        }
+
+        const token = await Token.findOne({ token: body.token, expired: false }).populate('user');
+        if (token) {
+            token.user.password = await bcrypt.hash(body.password, SALT_ROUND);
+            await token.user.save();
+            
+            token.expired = true
+            await token.save();
+
+            this.message = "Password updated sucessfully";
+            return this.response(null, true, 200);
+        }
+        this.message = "Unable to reset password. Please try again.";
         return this.response(null, false, 400);
     }
 

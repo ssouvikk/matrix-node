@@ -19,5 +19,17 @@ class AuthController {
 			.catch(err => next(err));
 	}
 
+	static forgotPassword(req, res, next) {
+		AuthService.forgotPassword(req)
+			.then(result => res.status(result.status).json(result))
+			.catch(err => next(err));
+	}
+
+	static resetPassword(req, res, next) {
+		AuthService.resetPassword(req)
+			.then(result => res.status(result.status).json(result))
+			.catch(err => next(err));
+	}
+
 }
 module.exports = AuthController;
