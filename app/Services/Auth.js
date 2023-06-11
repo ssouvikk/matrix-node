@@ -65,6 +65,22 @@ class AuthService extends BaseService {
         return this.response(null, false, 400);
     }
 
+    async verifyEmail(req) {
+        const { params: { token } } = req;
+        const tokenDetails = await Token.findOne({ token, expired: false }).populate('user');
+        if (tokenDetails) {
+            tokenDetails.user.verified = true;
+            await tokenDetails.user.save();
+
+            tokenDetails.expired = true
+            await tokenDetails.save()
+            
+            this.message = 'Congratulations! you have successfully verified your email';
+            return this.response(null)
+        }
+        this.message = 'Link is invalid or expired';
+        return this.response(null, false, 404);
+    }
 
 }
 

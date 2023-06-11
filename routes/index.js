@@ -11,6 +11,7 @@ const { AuthController, } = require('../app/Controllers');
 |-----------------------------------
 */
 AuthRouter.post('/register', AuthController.register);
+AuthRouter.get('/verify-email/:token', AuthController.verifyEmail);
 Router.use('/auth', AuthRouter);
 
 
