@@ -13,5 +13,11 @@ class AuthController {
 			.catch(err => next(err));
 	}
 
+	static login(req, res, next) {
+		AuthService.login(req)
+			.then(result => res.status(result.status).json(result))
+			.catch(err => next(err));
+	}
+
 }
 module.exports = AuthController;

@@ -1,11 +1,14 @@
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+
 const Config = require('../../Config');
 const BaseService = require('./BaseService');
-const bcrypt = require('bcrypt');
 const { User, Token, } = require('../Models/DB');
 const { NodeMailer } = require("../Libs/Mailer");
-const { RegisterValidator, } = require('../Libs/Validator');
-const { ROOT_PATH, TOKEN_SECRET, SALT_ROUND } = require('../../Config');
+const { RegisterValidator, LoginValidator } = require('../Libs/Validator');
+const { TOKEN_SECRET, SALT_ROUND } = require('../../Config');
 const { TOKEN_TYPES } = require('../Libs/Constants');
+const { USER_TYPES } = require('../Libs/Constants');
 
 class AuthService extends BaseService {
     constructor() {
@@ -74,12 +77,44 @@ class AuthService extends BaseService {
 
             tokenDetails.expired = true
             await tokenDetails.save()
-            
+
             this.message = 'Congratulations! you have successfully verified your email';
             return this.response(null)
         }
         this.message = 'Link is invalid or expired';
         return this.response(null, false, 404);
+    }
+
+    async login(req) {
+        const { body } = req;
+
+        const { error } = LoginValidator(body);
+        if (error) {
+            this.message = error.message;
+            return this.response(null, false, 400);
+        }
+
+        const user = await User.findOne({ email: body.email, })
+        if (user && user.password) {
+            const isPasswordValid = await bcrypt.compare(body.password, user.password)
+            if (isPasswordValid) {
+                if (user.type !== USER_TYPES.ADMIN) {
+                    if (user.verified === false) {
+                        this.message = 'Your email is not verified. Please verify your email';
+                        return this.response(null, false, 400);
+                    }
+                }
+                const { password, jwtToken, ...userWithoutHash } = user.toObject();
+                const newToken = jwt.sign(userWithoutHash, Config.TOKEN_SECRET, { expiresIn: '24h', issuer: 'https://scotch.io' })
+                user.jwtToken = await bcrypt.hash(newToken, SALT_ROUND)
+                await user.save()
+
+                this.message = '';
+                return this.response({ token: newToken, user: userWithoutHash });
+            }
+        }
+        this.message = 'Email or password is incorrect';
+        return this.response(null, false, 400);
     }
 
 }

@@ -20,6 +20,13 @@ class Validator {
         return schema.validate(params);
     }
 
+    static LoginValidator(params) {
+        const schema = Joi.object().keys({
+            email: VALIDATIONS.EMAIL,
+            password: VALIDATIONS.PASSWORD
+        });
+        return schema.validate(params);
+    }
     
 }
 
