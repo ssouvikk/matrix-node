@@ -24,6 +24,30 @@ async function start() {
 start()
 
 
-app.get('/', (req, res) => {
-    res.send('Hello, Express!');
+const Routers = require('./routes');
+app.use('/api/v1', Routers);
+app.all('*', (req, res) => res.status(501).json({ status: 501, success: false, data: null, message: 'Not implemented!' }))
+
+
+/*
+|-------------------------------------------
+| Error handling  Here
+|-------------------------------------------
+*/
+app.use((err, req, res, next) => {
+    if (!err) {
+        return next();
+    }
+    if (typeof err === 'string') {
+        return res.status(400).json({ status: 400, success: false, data: null, message: err });
+    } else if (err.name === 'ValidationError') {
+        return res.status(400).json({ status: 400, success: false, data: null, message: err.message });
+    } else if (err.name === 'UnauthorizedError') {
+        return res.status(401).json({ status: 401, success: false, data: null, message: 'Invalid Token' });
+    } else if (err.name === 'CastError') {
+        return res.status(404).json({ status: 404, success: false, data: null, message: 'Data was not found' });
+    } 
+    return res.status(404).json({ status: 404, success: false, data: null, message: err.message });
 });
+
+module.exports = app;
