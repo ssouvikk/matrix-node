@@ -1,6 +1,14 @@
 const ejs = require("ejs");
 const { createTransport } = require("nodemailer");
-const { MAIL_DRIVER, MAIL_HOST, SMTP_PORT, MAIL_USERNAME, MAIL_PASSWORD, MAIL_FROM_ADDRESS, MAIL_FROM_NAME, } = require("../../Config")
+const {
+	SMTP_PORT,
+	MAIL_DRIVER,
+	MAIL_FROM_NAME,
+	MAIL_FROM_ADDRESS,
+	SMTP_HOST: MAIL_HOST,
+	SMTP_PASSWORD: MAIL_PASSWORD,
+	SMTP_USERNAME: MAIL_USERNAME,
+} = require("../../Config")
 
 const Mailer = createTransport({
 	service: MAIL_DRIVER,

@@ -75,8 +75,13 @@ class AuthService extends BaseService {
 
     async verifyEmail(req) {
         const { params: { token } } = req;
-        const tokenDetails = await Token.findOne({ token, expired: false }).populate('user');
+        const tokenDetails = await Token.findOne({ token }).populate('user');
         if (tokenDetails) {
+            if (tokenDetails.expired) {
+                this.message = 'Your account is activated';
+                return this.response(null)
+            }
+
             tokenDetails.user.verified = true;
             await tokenDetails.user.save();
 
